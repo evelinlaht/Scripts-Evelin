@@ -1,0 +1,4 @@
+jack:users:Pass1234Word:/bin/bash
+michael:cybersecurity:QwerY01234:/bin/sh
+oksana:accounting:oksAnA55:/bin/bash
+elizabeth:administrators:admin12345:/bin/sh
