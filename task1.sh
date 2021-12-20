@@ -13,15 +13,17 @@ if [[ -f $USERS_PATH ]]; then
 
 	for LINE in `cat $USERS_PATH`
 	do
-
-			username=`echo "$LINE" | cut -d ":" -f1`
-			user_group=`echo "$LINE" | cut -d ":" -f2`
-			user_shell=`echo "$LINE" | cut -d ":" -f4`
-			user_password=`echo "$LINE" | cut -d ":" -f3`
-			ssl_password=`openssl passwd -1 "$user_password"`
-			if ! grep -q $username "/etc/passwd"; then
-					echo -e "$username was not found in the system!"
-				if [[ `grep $user_group "/etc/group"` ]]; then
+		username=`echo "$LINE" | cut -d ":" -f1`
+		user_group=`echo "$LINE" | cut -d ":" -f2`
+		user_shell=`echo "$LINE" | cut -d ":" -f4`
+		user_password=`echo "$LINE" | cut -d ":" -f3`
+		ssl_password=`openssl passwd -1 "$user_password"`
+		if ! grep -q $username "/etc/passwd"; then
+			echo -e "$username was not found in the system!"
+			read -p "Do you want to create a new user $username? [yes/no] " ANS_NEW
+			case $ANS_NEW in
+				[yY]|[yY][eE][sS])
+					if [[ `grep $user_group "/etc/group"` ]]; then
 						echo "Group $user_group already exists in the system!"
 						useradd $username -s $user_shell -m -g $user_group -p $ssl_password
 				else	
@@ -30,22 +32,33 @@ if [[ -f $USERS_PATH ]]; then
 						useradd $username -s $user_shell -m -g $user_group -p $ssl_password
 				fi
 				echo -e "User $username was created!\n"
-
-
-
-			elif [[ `grep $username "/etc/passwd"` ]]; then
-				echo -e "$username was found in system!"
-				read -p "Do you want to make some changes for $username? (yes/no): " ANSWER_CHANGES
-
-				case $ANSWER_CHANGES in 
-						[Yy]|[Yy][Ee][Ss])
-								echo "You answered yes!";;
-						[Nn]|[Nn][Oo])
-								echo "You answered no!";;
+				;;
+			[Nn]|[nN][Oo])
+				echo -e "The creation of user $username will be skipped!\n"
+				;;
+			*)
+				echo -e "Please enter [yes/no] only!\n"
+				;;
+			esac
+		elif [[ `grep $username "/etc/passwd"` ]]; then
+			exist_group=`id -gn %username`
+			echo -e "$username was found in system!"
+			read -p "Do you want to make some changes for $username? (yes/no): " ANS_CHANGES
+			case $ANS_CHANGES in 
+				[Yy]|[Yy][Ee][Ss])
+					if [[ "$exist_group" == "$user_group" ]]; then
+						echo "$username already exists in group $user_group";
+					else
+						echo "Group $usGroup $user_group for $username was changed!"
+						usermod -g $user_group $username;
+					fi
+					;;
+				[Nn]|[Nn][Oo])
+					echo "Changes of user $username will be skipped!";;
 				*)
-					echo "You need to enter only YES/NO!";;
-				esac
-			fi
+					echo -e "Please enter [yes/no] only!";;
+			esac
+		fi
 	done
 else
 	echo "$FILE_USERS doesn't exist"
