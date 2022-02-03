@@ -7,6 +7,9 @@ echo -e "\n"
 read -p "Enter name of the file which contains users with params: " FILE_USERS
 
 USERS_PATH="./src/$FILE_USERS"
+RED='\033[0;31m'
+GREEN='\032[0;32'
+NC='\033[0m'
 
 if [[ -f $USERS_PATH ]]; then 
 	IFS=$'\n'
@@ -26,6 +29,16 @@ if [[ -f $USERS_PATH ]]; then
 		exist_group=`id -gn $username`
 
 		if [[ $CHOICE_ACTION == "1" ]]; then
+			if [[ -f /tmp/added.txt ]]; then
+			echo $username >> /tmp/added.txt
+			else
+				touch /tmp/added.txt
+				echo $username >> /tmp/added.txt
+			output_added=`cat /tmp/added.txt`
+			echo -e "List of newly added users:"
+			echo -e ${GREEN}$output_added${NC}
+			rm /tmp/added.txt
+		fi
 		if ! grep -q $username "/etc/passwd"; then
 			echo -e "$username was not found in the system!"
 			read -p "Do you want to create a new user $username? [y/n] " ANS_NEW
@@ -109,18 +122,32 @@ if [[ -f $USERS_PATH ]]; then
 	elif [[ $CHOICE_ACTION == "2" ]]; then
 		if [[ `grep "^$username" /etc/passwd` ]]; then
 			userdel -r $username
+
 			echo -e "User $username was deleted!\n"
+			if [[ -f /tmp/deleted.txt ]]; then
+			echo $username >> /tmp/deleted.txt
+			else
+				touch /tmp/deleted.txt
+				echo $username >> /tmp/deleted.txt
+			fi
 		else
+
 			echo -e "User $username was not found in system!\n"
 		fi
 	else
 		echo -e "Please choose valid choices [1/2]!\n"
 		exit 1
 	fi
-done
-	
+	done
+if [[ $CHOICE_ACTION == "2" ]]; then
+	output_deleted=`cat /tmp/deleted.txt`
+	echo -e "List of deleted users:"
+	echo -e ${RED}$output_deleted${NC}
+	rm /tmp/deleted.txt
+fi
+
 else
 	echo "$FILE_USERS doesn't exist"
-	echo "You need to create a new file?"
+	echo "You need to create a new file."
 fi
 
